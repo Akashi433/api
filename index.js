@@ -15,42 +15,14 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-let apiKeys = {};
+let apiKeys = {}; // Tempat untuk menyimpan API Keys dan limit mereka
 
-// Fungsi untuk menambahkan API key
-const addApiKey = (key, type) => {
-    if (!apiKeys[key]) {
-        apiKeys[key] = {
-            type: type,
-            limit: type === 'premium' ? 100 : 10,
-            requests: 0,
-            resetTime: Date.now() + 3600000 // reset setiap jam
-        };
+// Fungsi untuk reset limit setiap jam
+setInterval(() => {
+    for (const key in apiKeys) {
+        apiKeys[key].limit = apiKeys[key].isPremium ? 1000 : 100; // Reset limit
     }
-};
-
-// Middleware untuk memeriksa API key
-const checkApiKey = (req, res, next) => {
-    const apiKey = req.query.apikey;
-    if (apiKeys[apiKey]) {
-        const keyData = apiKeys[apiKey];
-        
-        // Reset limit jika waktu reset sudah lewat
-        if (Date.now() > keyData.resetTime) {
-            keyData.requests = 0;
-            keyData.resetTime = Date.now() + 3600000; // reset setiap jam
-        }
-
-        if (keyData.requests < keyData.limit) {
-            keyData.requests += 1;
-            next();
-        } else {
-            res.status(429).json({ message: 'Limit exceeded' });
-        }
-    } else {
-        res.status(403).json({ message: 'Invalid API Key' });
-    }
-};
+}, 60 * 60 * 1000); // Reset setiap jam
 
 // Fungsi untuk ragBot
 async function ragBot(message) {
