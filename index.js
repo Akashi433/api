@@ -15,7 +15,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-let apiKeys = ['zi']; // Tempat untuk menyimpan API Keys dan limit mereka
+let apiKeys = {}; // Tempat untuk menyimpan API Keys dan limit mereka
 
 // Fungsi untuk reset limit setiap jam
 setInterval(() => {
