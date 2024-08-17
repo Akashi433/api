@@ -237,7 +237,7 @@ app.get('/api/smartcontract', async (req, res) => {
 app.get('/api/blackboxAIChat', async (req, res) => {
   try {
     const apikey = req.query.apikey;
-    const message = req.query.message;
+          message = req.query.message;
      if (!apikey) {
       return res.status(400).json({ error: 'Parameter "apikey" tidak ditemukan' });
         }
