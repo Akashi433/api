@@ -16,7 +16,8 @@ app.use(bodyParser.json());
 
 
 let apiKeys = {};
-const PREMIUM_LIMIT = 100;
+const FREE_LIMIT = 100
+const PREMIUM_LIMIT = 1000;
 const RESET_TIME = 3600000; // 1 jam dalam milidetik
 
 // Middleware untuk memeriksa API key
@@ -112,7 +113,7 @@ app.get('/', (req, res) => {
 app.post('/addapikey', (req, res) => {
     const { apikey } = req.body;
     if (apikey) {
-        apiKeys[apikey] = { limit: PREMIUM_LIMIT, lastReset: Date.now() };
+        apiKeys[apikey] = { limit: FREE_LIMIT, lastReset: Date.now() };
         res.send(`API key ${apikey} berhasil ditambahkan!`);
     } else {
         res.status(400).send('API key tidak boleh kosong');
