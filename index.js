@@ -15,7 +15,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-let apiKeys = {}; // Tempat untuk menyimpan API Keys dan limit mereka
+let apiKeys = ["zi"]; // Tempat untuk menyimpan API Keys dan limit mereka
 
 // Fungsi untuk reset limit setiap jam
 setInterval(() => {
@@ -235,10 +235,6 @@ app.get('/api/smartcontract', async (req, res) => {
 
 // Endpoint untuk blackboxAIChat
 app.get('/api/blackboxAIChat', async (req, res) => {
-    const { key } = req.query;
-    if (!key) {
-	    return res.status(404).json({ 'API Key tidak ditemukan!' });
-	   }
        try {
 	const message = req.query.message
       if (!message) {
