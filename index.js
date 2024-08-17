@@ -131,55 +131,44 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Fitur untuk menambahkan API key
+// Route untuk menambahkan API key
 app.post('/addapikey', (req, res) => {
-    const { apikey } = req.body;
-    if (apikey) {
-        apiKeys[apikey] = { limit: FREE_LIMIT, lastReset: Date.now() };
-        res.send(`API key ${apikey} berhasil ditambahkan!`);
-    } else {
-        res.status(400).send('API key tidak boleh kosong');
-    }
+    const { key, free } = req.body; // type bisa 'free' atau 'premium'
+    addApiKey(key, free);
+    res.json({ message: 'API Key added successfully' });
 });
 
-// Fitur untuk menghapus API key
+// Route untuk menghapus API key
 app.post('/removekey', (req, res) => {
-    const { apikey } = req.body;
-    if (apiKeys[apikey]) {
-        delete apiKeys[apikey];
-        res.send(`API key ${apikey} berhasil dihapus!`);
+    const { key } = req.body;
+    delete apiKeys[key];
+    res.json({ message: 'API Key removed successfully' });
+});
+
+// Route untuk memeriksa API key
+app.get('/checkapikey', (req, res) => {
+    const apiKey = req.query.apikey;
+    if (apiKeys[apiKey]) {
+        res.json({ message: 'API Key is valid', data: apiKeys[apiKey] });
     } else {
-        res.status(404).send('API key tidak ditemukan');
+        res.status(403).json({ message: 'Invalid API Key' });
     }
 });
 
-// Fitur untuk memeriksa API key
-app.post('/checkapikey', (req, res) => {
-    const { apikey } = req.body;
-    if (apiKeys[apikey]) {
-        res.send(`API key ${apikey} valid! Sisa limit: ${apiKeys[apikey].limit}`);
-    } else {
-        res.status(403).send('API key tidak valid');
-    }
+// Route untuk menambahkan premium API key
+app.post('/addpremiumapikey', (req, res) => {
+    const { key } = req.body;
+    addApiKey(key, 'premium');
+    res.json({ message: 'Premium API Key added successfully' });
 });
 
-// Fitur untuk premium API key
-app.post('/premiumapikey', (req, res) => {
-    const { apikey } = req.body;
-    if (apiKeys[apikey]) {
-        const currentTime = Date.now();
-        if (currentTime - apiKeys[apikey].lastReset > RESET_TIME) {
-            apiKeys[apikey].limit = PREMIUM_LIMIT; // Reset limit
-            apiKeys[apikey].lastReset = currentTime;
-        }
-        if (apiKeys[apikey].limit > 0) {
-            apiKeys[apikey].limit -= 1; // Kurangi limit
-            res.send(`Penggunaan API key ${apikey} berhasil! Sisa limit: ${apiKeys[apikey].limit}`);
-        } else {
-            res.status(429).send('Limit API key sudah habis, coba lagi nanti.');
-        }
+// Route untuk mendapatkan informasi premium API key
+app.get('/premiumapikey', (req, res) => {
+    const apiKey = req.query.apikey;
+    if (apiKeys[apiKey] && apiKeys[apiKey].type === 'premium') {
+        res.json({ message: 'Premium API Key is valid', data: apiKeys[apiKey] });
     } else {
-        res.status(403).send('API key tidak valid');
+        res.status(403).json({ message: 'Invalid Premium API Key' });
     }
 });
 
