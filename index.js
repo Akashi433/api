@@ -16,17 +16,39 @@ app.use(bodyParser.json());
 
 
 let apiKeys = {};
-const FREE_LIMIT = 100;
-const PREMIUM_LIMIT = 1000;
-const RESET_TIME = 3600000; // 1 jam dalam milidetik
+
+// Fungsi untuk menambahkan API key
+const addApiKey = (key, type) => {
+    if (!apiKeys[key]) {
+        apiKeys[key] = {
+            type: type,
+            limit: type === 'premium' ? 100 : 10,
+            requests: 0,
+            resetTime: Date.now() + 3600000 // reset setiap jam
+        };
+    }
+};
 
 // Middleware untuk memeriksa API key
 const checkApiKey = (req, res, next) => {
-    const apiKey = req.headers['apikey'];
+    const apiKey = req.query.apikey;
     if (apiKeys[apiKey]) {
-        next();
+        const keyData = apiKeys[apiKey];
+        
+        // Reset limit jika waktu reset sudah lewat
+        if (Date.now() > keyData.resetTime) {
+            keyData.requests = 0;
+            keyData.resetTime = Date.now() + 3600000; // reset setiap jam
+        }
+
+        if (keyData.requests < keyData.limit) {
+            keyData.requests += 1;
+            next();
+        } else {
+            res.status(429).json({ message: 'Limit exceeded' });
+        }
     } else {
-        res.status(403).send('API key tidak valid');
+        res.status(403).json({ message: 'Invalid API Key' });
     }
 };
 
