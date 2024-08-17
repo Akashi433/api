@@ -103,47 +103,64 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Route untuk menambahkan API key
+// Route untuk menambah API Key
 app.post('/addapikey', (req, res) => {
-    const { key, free } = req.body; // type bisa 'free' atau 'premium'
-    addApiKey(key, free);
-    res.json({ message: 'API Key added successfully' });
-});
-
-// Route untuk menghapus API key
-app.post('/removekey', (req, res) => {
     const { key } = req.body;
-    delete apiKeys[key];
-    res.json({ message: 'API Key removed successfully' });
-});
-
-// Route untuk memeriksa API key
-app.get('/checkapikey', (req, res) => {
-    const apiKey = req.query.apikey;
-    if (apiKeys[apiKey]) {
-        res.json({ message: 'API Key is valid', data: apiKeys[apiKey] });
-    } else {
-        res.status(403).json({ message: 'Invalid API Key' });
+    if (!key) {
+        return res.status(400).send('API Key diperlukan!');
     }
+    apiKeys[key] = { isPremium: false, limit: 100 }; // Default free limit
+    res.send(`API Key ${key} berhasil ditambahkan dengan status free!`);
 });
 
-// Route untuk menambahkan premium API key
+// Route untuk menghapus API Key
+app.delete('/removekey', (req, res) => {
+    const { key } = req.body;
+    if (apiKeys[key]) {
+        delete apiKeys[key];
+        return res.send(`API Key ${key} berhasil dihapus!`);
+    }
+    res.status(404).send('API Key tidak ditemukan!');
+});
+
+// Route untuk mengecek API Key
+app.get('/checkapikey', (req, res) => {
+    const { key } = req.query;
+    if (apiKeys[key]) {
+        return res.send(apiKeys[key]);
+    }
+    res.status(404).send('API Key tidak ditemukan!');
+});
+
+// Route untuk menambahkan API Key premium
 app.post('/addpremiumapikey', (req, res) => {
     const { key } = req.body;
-    addApiKey(key, 'premium');
-    res.json({ message: 'Premium API Key added successfully' });
-});
-
-// Route untuk mendapatkan informasi premium API key
-app.get('/premiumapikey', (req, res) => {
-    const apiKey = req.query.apikey;
-    if (apiKeys[apiKey] && apiKeys[apiKey].type === 'premium') {
-        res.json({ message: 'Premium API Key is valid', data: apiKeys[apiKey] });
-    } else {
-        res.status(403).json({ message: 'Invalid Premium API Key' });
+    if (apiKeys[key]) {
+        apiKeys[key].isPremium = true;
+        apiKeys[key].limit = 1000; // Set limit premium
+        return res.send(`API Key ${key} berhasil diupgrade menjadi premium!`);
     }
+    res.status(404).send('API Key tidak ditemukan!');
 });
 
+// Route untuk mendapatkan limit dari API Key
+app.get('/checklimit', (req, res) => {
+    const { key } = req.query;
+    if (apiKeys[key]) {
+        return res.send(`Limit untuk API Key ${key}: ${apiKeys[key].limit}`);
+    }
+    res.status(404).send('API Key tidak ditemukan!');
+});
+
+// Route untuk mereset limit API Key
+app.post('/resetlimit', (req, res) => {
+    const { key } = req.body;
+    if (apiKeys[key]) {
+        apiKeys[key].limit = apiKeys[key].isPremium ? 1000 : 100; // Reset limit sesuai jenis
+        return res.send(`Limit untuk API Key ${key} berhasil direset!`);
+    }
+    res.status(404).send('API Key tidak ditemukan!');
+});
 // Endpoint untuk ragBot
 app.get('/api/ragbot', async (req, res) => {
   try {
