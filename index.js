@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 
 
 let apiKeys = {};
-const FREE_LIMIT = 100
+const FREE_LIMIT = 100;
 const PREMIUM_LIMIT = 1000;
 const RESET_TIME = 3600000; // 1 jam dalam milidetik
 
@@ -135,7 +135,7 @@ app.post('/removekey', (req, res) => {
 app.post('/checkapikey', (req, res) => {
     const { apikey } = req.body;
     if (apiKeys[apikey]) {
-        res.send(`API key ${apikey} valid!`);
+        res.send(`API key ${apikey} valid! Sisa limit: ${apiKeys[apikey].limit}`);
     } else {
         res.status(403).send('API key tidak valid');
     }
