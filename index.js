@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const axios = require('axios');
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,6 +91,68 @@ async function blackboxAIChat(message) {
 // Endpoint untuk servis dokumen HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+let apiKeys = {}; // Menyimpan API keys
+const LIMIT_RESET_INTERVAL = 60 * 60 * 1000; // 1 Jam dalam milidetik
+
+// Middleware untuk memeriksa API key
+function checkApiKey(req, res, next) {
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKeys[apiKey]) {
+        return res.status(403).json({ message: 'Forbidden: Invalid API Key' });
+    }
+    next();
+}
+
+// Route untuk menambah API key
+app.post('/addapikey', (req, res) => {
+    const { apiKey } = req.body;
+    if (apiKeys[apiKey]) {
+        return res.status(400).json({ message: 'API Key already exists' });
+    }
+    apiKeys[apiKey] = { premium: false, limit: 100, requestCount: 0, resetTime: Date.now() + LIMIT_RESET_INTERVAL };
+    res.status(201).json({ message: 'API Key added successfully' });
+});
+
+// Route untuk menghapus API key
+app.delete('/removekey', (req, res) => {
+    const { apiKey } = req.body;
+    if (!apiKeys[apiKey]) {
+        return res.status(404).json({ message: 'API Key not found' });
+    }
+    delete apiKeys[apiKey];
+    res.status(200).json({ message: 'API Key removed successfully' });
+});
+
+// Route untuk mengupgrade API key menjadi premium
+app.post('/premiumapikey', (req, res) => {
+    const { apiKey } = req.body;
+    if (!apiKeys[apiKey]) {
+        return res.status(404).json({ message: 'API Key not found' });
+    }
+    apiKeys[apiKey].premium = true;
+    res.status(200).json({ message: 'API Key upgraded to premium' });
+});
+
+// Route untuk menggunakan API (contoh)
+app.get('/someapi', checkApiKey, (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    const keyInfo = apiKeys[apiKey];
+
+    // Reset limit setiap jam
+    if (Date.now() > keyInfo.resetTime) {
+        keyInfo.requestCount = 0;
+        keyInfo.resetTime = Date.now() + LIMIT_RESET_INTERVAL;
+    }
+
+    // Cek limit
+    if (keyInfo.requestCount >= keyInfo.limit) {
+        return res.status(429).json({ message: 'Rate limit exceeded' });
+    }
+
+    keyInfo.requestCount++;
+    res.status(200).json({ message: 'API accessed successfully', requestCount: keyInfo.requestCount });
 });
 
 // Endpoint untuk ragBot
