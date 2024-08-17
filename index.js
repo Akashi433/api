@@ -15,9 +15,19 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-let apiKeys = {}; // Menyimpan API keys
-const LIMIT_RESET_INTERVAL = 60 * 60 * 1000; // 1 Jam dalam milidetik
+let apiKeys = {};
+const PREMIUM_LIMIT = 100;
+const RESET_TIME = 3600000; // 1 jam dalam milidetik
 
+// Middleware untuk memeriksa API key
+const checkApiKey = (req, res, next) => {
+    const apiKey = req.headers['apikey'];
+    if (apiKeys[apiKey]) {
+        next();
+    } else {
+        res.status(403).send('API key tidak valid');
+    }
+};
 
 // Fungsi untuk ragBot
 async function ragBot(message) {
