@@ -4,8 +4,6 @@ const path = require('path');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 
-app.use(bodyParser.json());
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.enable("trust proxy");
@@ -13,6 +11,12 @@ app.set("json spaces", 2);
 
 // Middleware untuk CORS
 app.use(cors());
+app.use(bodyParser.json());
+
+
+let apiKeys = {}; // Menyimpan API keys
+const LIMIT_RESET_INTERVAL = 60 * 60 * 1000; // 1 Jam dalam milidetik
+
 
 // Fungsi untuk ragBot
 async function ragBot(message) {
@@ -92,9 +96,6 @@ async function blackboxAIChat(message) {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-let apiKeys = {}; // Menyimpan API keys
-const LIMIT_RESET_INTERVAL = 60 * 60 * 1000; // 1 Jam dalam milidetik
 
 // Middleware untuk memeriksa API key
 function checkApiKey(req, res, next) {
