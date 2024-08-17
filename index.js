@@ -236,11 +236,10 @@ app.get('/api/smartcontract', async (req, res) => {
 // Endpoint untuk blackboxAIChat
 app.get('/api/blackboxAIChat', async (req, res) => {
     const { key } = req.query;
-    if (apiKeys[key]) {
-        return res.send(apiKeys[key]);
-    }
-    res.status(404).send('API Key tidak ditemukan!');
-	try {
+    if (!key) {
+	    return res.status(404).json({ 'API Key tidak ditemukan!' });
+	   }
+       try {
 	const message = req.query.message
       if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
